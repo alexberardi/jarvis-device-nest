@@ -1,0 +1,37 @@
+name: "nest"
+display_name: "Google Nest"
+description: "Google Nest thermostat and camera control via the Smart Device Management (SDM) API. Requires a Device Access project."
+version: "1.0.0"
+min_jarvis_version: "0.9.0"
+license: "MIT"
+author:
+  github: "alexberardi"
+categories: ["smart-home", "climate"]
+platforms: ["darwin", "linux"]
+keywords: ["nest", "google", "thermostat", "camera", "doorbell", "sdm"]
+packages:
+  - name: httpx
+secrets:
+  - key: NEST_PROJECT_ID
+    scope: integration
+    value_type: string
+    description: "SDM Device Access project ID"
+    is_sensitive: false
+  - key: NEST_ACCESS_TOKEN
+    scope: integration
+    value_type: string
+    description: "OAuth access token (auto-populated)"
+  - key: NEST_REFRESH_TOKEN
+    scope: integration
+    value_type: string
+    description: "OAuth refresh token (auto-populated)"
+  - key: NEST_CLIENT_ID
+    scope: integration
+    value_type: string
+    description: "Override default Google OAuth client ID (optional)"
+    is_sensitive: false
+  - key: NEST_TEMP_UNIT
+    scope: integration
+    value_type: string
+    description: "Temperature unit: F (default) or C"
+    is_sensitive: false
