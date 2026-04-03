@@ -9,6 +9,12 @@ author:
 categories: ["smart-home", "climate"]
 platforms: ["darwin", "linux"]
 keywords: ["nest", "google", "thermostat", "camera", "doorbell", "sdm"]
+
+components:
+  - type: device_protocol
+    name: nest
+    path: device_families/nest/protocol.py
+
 packages:
   - name: httpx
 secrets:
