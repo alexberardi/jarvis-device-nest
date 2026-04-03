@@ -126,8 +126,8 @@ class NestProtocol(IJarvisDeviceProtocol):
     @property
     def supported_actions(self) -> list[IJarvisButton]:
         return [
-            IJarvisButton(action="turn_on", label="Turn On", icon="thermostat"),
-            IJarvisButton(action="turn_off", label="Turn Off", icon="thermostat-off"),
+            IJarvisButton(button_text="Turn On", button_action="turn_on", button_type="primary", button_icon="thermostat"),
+            IJarvisButton(button_text="Turn Off", button_action="turn_off", button_type="secondary", button_icon="thermostat-off"),
         ]
 
     def store_auth_values(self, values: dict[str, str]) -> None:
