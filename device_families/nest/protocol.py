@@ -141,7 +141,7 @@ class NestProtocol(IJarvisDeviceProtocol):
         except ImportError:
             pass
 
-    async def discover_devices(self, timeout: int = 5) -> list[DiscoveredDevice]:
+    async def discover(self, timeout: int = 5) -> list[DiscoveredDevice]:
         project_id: str | None = self._get_project_id()
         access_token: str | None = self._get_access_token()
 
@@ -216,7 +216,7 @@ class NestProtocol(IJarvisDeviceProtocol):
         logger.info(f"Nest discovery found {len(devices)} device(s)")
         return devices
 
-    async def control_device(
+    async def control(
         self, device: DiscoveredDevice, action: str, params: dict[str, Any] | None = None
     ) -> DeviceControlResult:
         access_token: str | None = self._get_access_token()
