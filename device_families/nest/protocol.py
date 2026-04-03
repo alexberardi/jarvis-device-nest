@@ -198,14 +198,14 @@ class NestProtocol(IJarvisDeviceProtocol):
 
                     devices.append(
                         DiscoveredDevice(
-                            id=device_id,
+                            entity_id=device_id,
                             name=device_name,
                             domain=domain,
                             protocol=self.protocol_name,
                             model=model,
                             manufacturer="Google",
                             cloud_id=cloud_id,
-                            metadata={"sdm_type": device_type},
+                            extra={"sdm_type": device_type},
                         )
                     )
 
@@ -222,21 +222,22 @@ class NestProtocol(IJarvisDeviceProtocol):
         access_token: str | None = self._get_access_token()
         if not access_token:
             return DeviceControlResult(
-                success=False, message="NEST_ACCESS_TOKEN not configured — complete OAuth setup"
+                success=False, entity_id=device.entity_id, action=action,
+                error="NEST_ACCESS_TOKEN not configured — complete OAuth setup",
             )
 
         try:
             import httpx
         except ImportError:
             return DeviceControlResult(
-                success=False,
-                message="httpx is not installed. Run: pip install httpx",
+                success=False, entity_id=device.entity_id, action=action,
+                error="httpx is not installed. Run: pip install httpx",
             )
 
         params = params or {}
         cloud_id: str = device.cloud_id or ""
         if not cloud_id:
-            return DeviceControlResult(success=False, message="No cloud device ID available")
+            return DeviceControlResult(success=False, entity_id=device.entity_id, action=action, error="No cloud device ID available")
 
         headers: dict[str, str] = {
             "Authorization": f"Bearer {access_token}",
@@ -282,8 +283,8 @@ class NestProtocol(IJarvisDeviceProtocol):
             valid_modes: set[str] = {"HEAT", "COOL", "HEATCOOL", "OFF"}
             if nest_mode not in valid_modes:
                 return DeviceControlResult(
-                    success=False,
-                    message=f"Invalid mode: {nest_mode}. Valid: {', '.join(sorted(valid_modes))}",
+                    success=False, entity_id=device.entity_id, action=action,
+                    error=f"Invalid mode: {nest_mode}. Valid: {', '.join(sorted(valid_modes))}",
                 )
             command = "sdm.devices.commands.ThermostatMode.SetMode"
             command_params = {"mode": nest_mode}
@@ -301,7 +302,7 @@ class NestProtocol(IJarvisDeviceProtocol):
             command_params = {}
 
         else:
-            return DeviceControlResult(success=False, message=f"Unsupported action: {action}")
+            return DeviceControlResult(success=False, entity_id=device.entity_id, action=action, error=f"Unsupported action: {action}")
 
         payload: dict[str, Any] = {
             "command": command,
@@ -317,7 +318,7 @@ class NestProtocol(IJarvisDeviceProtocol):
                 )
                 if resp.status_code == 401:
                     return DeviceControlResult(
-                        success=False, message="Nest access token expired — re-authenticate"
+                        success=False, entity_id=device.entity_id, action=action, error="Nest access token expired — re-authenticate"
                     )
                 if resp.status_code == 200:
                     result_data: dict[str, Any] = resp.json()
@@ -326,21 +327,17 @@ class NestProtocol(IJarvisDeviceProtocol):
                         results: dict[str, Any] = result_data.get("results", {})
                         stream_url: str = results.get("streamUrls", {}).get("rtspUrl", "")
                         return DeviceControlResult(
-                            success=True,
-                            message=f"Stream URL: {stream_url}",
+                            success=True, entity_id=device.entity_id, action=action,
                         )
 
-                    action_label: str = action.replace("_", " ")
-                    return DeviceControlResult(
-                        success=True, message=f"{device.name} {action_label} successful"
-                    )
+                    return DeviceControlResult(success=True, entity_id=device.entity_id, action=action)
                 else:
                     return DeviceControlResult(
-                        success=False,
-                        message=f"Nest API returned {resp.status_code}: {resp.text}",
+                        success=False, entity_id=device.entity_id, action=action,
+                        error=f"Nest API returned {resp.status_code}: {resp.text}",
                     )
         except Exception as e:
-            return DeviceControlResult(success=False, message=f"Control failed: {e}")
+            return DeviceControlResult(success=False, entity_id=device.entity_id, action=action, error=f"Control failed: {e}")
 
     async def get_state(self, device: DiscoveredDevice) -> dict[str, Any]:
         access_token: str | None = self._get_access_token()
