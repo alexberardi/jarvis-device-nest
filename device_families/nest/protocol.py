@@ -122,8 +122,8 @@ class NestProtocol(IJarvisDeviceProtocol):
         client_id: str = self._get_client_id()
         return AuthenticationConfig(
             provider="google_nest",
-            auth_url="https://nestservices.google.com/partnerconnections/{project_id}/auth",
-            token_url="https://oauth2.googleapis.com/token",
+            authorize_url="https://nestservices.google.com/partnerconnections/{project_id}/auth",
+            exchange_url="https://oauth2.googleapis.com/token",
             client_id=client_id,
             scopes=["https://www.googleapis.com/auth/sdm.service"],
             native_redirect_uri="com.jarvis.app:/oauth2callback",
