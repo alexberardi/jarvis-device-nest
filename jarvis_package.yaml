@@ -1,7 +1,7 @@
 name: "nest"
 display_name: "Google Nest"
 description: "Google Nest thermostat and camera control via the Smart Device Management (SDM) API. Requires a Device Access project."
-version: "1.0.0"
+version: "1.0.1"
 min_jarvis_version: "0.9.0"
 license: "MIT"
 author:
@@ -36,8 +36,42 @@ secrets:
     value_type: string
     description: "Override default Google OAuth client ID (optional)"
     is_sensitive: false
+  - key: NEST_WEB_CLIENT_ID
+    scope: integration
+    value_type: string
+    description: "Web Application OAuth client ID (required for camera support)"
+    is_sensitive: false
+  - key: NEST_WEB_CLIENT_SECRET
+    scope: integration
+    value_type: string
+    description: "Web Application OAuth client secret (required for camera support)"
   - key: NEST_TEMP_UNIT
     scope: integration
     value_type: string
     description: "Temperature unit: F (default) or C"
     is_sensitive: false
+
+setup_guide: |
+  ## Basic Setup (Thermostat)
+
+  1. Go to [Google Device Access Console](https://console.nest.google.com/device-access)
+  2. Create a project (one-time $5 fee) and copy the **Project ID**
+  3. Paste it in the **NEST_PROJECT_ID** field above
+  4. Tap **Authenticate with Google Nest** and sign in
+
+  That's it — your thermostat will appear in device discovery.
+
+  ## Camera Support (Optional)
+
+  To view live camera/doorbell streams, you need a **Web Application** OAuth client:
+
+  1. Go to [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
+  2. Click **Create Credentials → OAuth client ID**
+  3. Select **Web application** as the type
+  4. Under **Authorized redirect URIs**, add:
+     `https://relay.jarvisautomation.io/oauth/bounce`
+  5. Click **Create** and copy the **Client ID** and **Client Secret**
+  6. Paste them in **NEST_WEB_CLIENT_ID** and **NEST_WEB_CLIENT_SECRET** above
+  7. Re-authenticate with **Authenticate with Google Nest**
+
+  The new token works for both thermostat and camera control.

@@ -109,6 +109,16 @@ class NestProtocol(IJarvisDeviceProtocol):
         override: str | None = _storage.get_secret("NEST_CLIENT_ID")
         return override if override else DEFAULT_CLIENT_ID
 
+    def _get_web_client_id(self) -> str | None:
+        return _storage.get_secret("NEST_WEB_CLIENT_ID")
+
+    def _get_web_client_secret(self) -> str | None:
+        return _storage.get_secret("NEST_WEB_CLIENT_SECRET")
+
+    def _has_camera_support(self) -> bool:
+        """Camera support requires Web Application OAuth credentials."""
+        return bool(self._get_web_client_id() and self._get_web_client_secret())
+
     @property
     def required_secrets(self) -> list[JarvisSecret]:
         return [
@@ -119,6 +129,26 @@ class NestProtocol(IJarvisDeviceProtocol):
 
     @property
     def authentication(self) -> AuthenticationConfig:
+        if self._has_camera_support():
+            # Web Application OAuth — token works with go2rtc for camera streaming.
+            # Web clients require https:// redirect URIs, so we use the relay
+            # bounce flow (no native_redirect_uri). The relay URL must be added
+            # to the Web client's authorized redirect URIs in Google Cloud Console.
+            web_client_id: str = self._get_web_client_id()  # type: ignore[assignment]
+            web_client_secret: str = self._get_web_client_secret()  # type: ignore[assignment]
+            return AuthenticationConfig(
+                provider="google_nest",
+                auth_url="https://nestservices.google.com/partnerconnections/{project_id}/auth",
+                token_url="https://oauth2.googleapis.com/token",
+                client_id=web_client_id,
+                client_secret=web_client_secret,
+                scopes=["https://www.googleapis.com/auth/sdm.service"],
+                supports_pkce=False,
+                requires_background_refresh=True,
+                extra_authorize_params={"access_type": "offline", "prompt": "consent"},
+            )
+
+        # Default: iOS/PKCE flow — thermostat only, no camera streaming
         client_id: str = self._get_client_id()
         project_id = self._get_project_id()
         if project_id:
