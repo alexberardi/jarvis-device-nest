@@ -120,19 +120,30 @@ class NestProtocol(IJarvisDeviceProtocol):
     @property
     def authentication(self) -> AuthenticationConfig:
         client_id: str = self._get_client_id()
+        project_id = self._get_project_id()
+        if project_id:
+            authorize_url = (
+                f"https://nestservices.google.com/partnerconnections/{project_id}/auth"
+            )
+        else:
+            authorize_url = "https://nestservices.google.com/partnerconnections/auth"
+
         return AuthenticationConfig(
             type="oauth",
             provider="google_nest",
             friendly_name="Google Nest",
             client_id=client_id,
             keys=["access_token", "refresh_token"],
-            authorize_url="https://nestservices.google.com/partnerconnections/{project_id}/auth",
+            authorize_url=authorize_url,
             exchange_url="https://oauth2.googleapis.com/token",
             scopes=["https://www.googleapis.com/auth/sdm.service"],
-            native_redirect_uri="com.jarvis.app:/oauth2callback",
             supports_pkce=True,
+            extra_authorize_params={"access_type": "offline", "prompt": "consent"},
             requires_background_refresh=True,
             refresh_token_secret_key="NEST_REFRESH_TOKEN",
+            native_redirect_uri=(
+                f"com.googleusercontent.apps.{client_id}:/oauthredirect"
+            ),
         )
 
     @property
