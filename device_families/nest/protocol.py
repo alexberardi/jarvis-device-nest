@@ -41,7 +41,7 @@ logger = JarvisLogger(service="device.nest")
 
 _storage = JarvisStorage("nest")
 
-DEFAULT_CLIENT_ID: str = "683175564329-fk73ukp0g9jl8h7aiecgr8gjr62u2q4c.apps.googleusercontent.com"
+DEFAULT_CLIENT_ID: str = "683175564329-24fi9h6hck48hfrbjhb24vf12680e5ec.apps.googleusercontent.com"
 SDM_API_BASE: str = "https://smartdevicemanagement.googleapis.com/v1"
 
 _SDM_TYPE_TO_DOMAIN: dict[str, str] = {
@@ -129,6 +129,7 @@ class NestProtocol(IJarvisDeviceProtocol):
             authorize_url="https://nestservices.google.com/partnerconnections/{project_id}/auth",
             exchange_url="https://oauth2.googleapis.com/token",
             scopes=["https://www.googleapis.com/auth/sdm.service"],
+            native_redirect_uri="com.jarvis.app:/oauth2callback",
             supports_pkce=True,
             requires_background_refresh=True,
             refresh_token_secret_key="NEST_REFRESH_TOKEN",
