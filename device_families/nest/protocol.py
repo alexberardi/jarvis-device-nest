@@ -129,7 +129,7 @@ class NestProtocol(IJarvisDeviceProtocol):
             authorize_url="https://nestservices.google.com/partnerconnections/{project_id}/auth",
             exchange_url="https://oauth2.googleapis.com/token",
             scopes=["https://www.googleapis.com/auth/sdm.service"],
-            native_redirect_uri=f"com.googleusercontent.apps.{client_id}:/oauthredirect",
+            native_redirect_uri="com.jarvis.app:/oauth2callback",
             supports_pkce=True,
             requires_background_refresh=True,
             refresh_token_secret_key="NEST_REFRESH_TOKEN",
