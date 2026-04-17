@@ -142,7 +142,8 @@ class NestProtocol(IJarvisDeviceProtocol):
             requires_background_refresh=True,
             refresh_token_secret_key="NEST_REFRESH_TOKEN",
             native_redirect_uri=(
-                f"com.googleusercontent.apps.{client_id}:/oauthredirect"
+                f"com.googleusercontent.apps."
+                f"{client_id.removesuffix('.apps.googleusercontent.com')}:/oauthredirect"
             ),
         )
 
