@@ -110,6 +110,14 @@ class NestProtocol(IJarvisDeviceProtocol):
         return override if override else DEFAULT_CLIENT_ID
 
     @property
+    def required_secrets(self) -> list[JarvisSecret]:
+        return [
+            JarvisSecret("NEST_PROJECT_ID", "SDM Device Access project ID", "integration", "string", required=True, is_sensitive=False),
+            JarvisSecret("NEST_CLIENT_ID", "Override default Google OAuth client ID (optional)", "integration", "string", required=False, is_sensitive=False),
+            JarvisSecret("NEST_TEMP_UNIT", "Temperature unit: F or C (default F)", "integration", "string", required=False, is_sensitive=False),
+        ]
+
+    @property
     def authentication(self) -> AuthenticationConfig:
         client_id: str = self._get_client_id()
         return AuthenticationConfig(
