@@ -136,16 +136,26 @@ class NestProtocol(IJarvisDeviceProtocol):
             # to the Web client's authorized redirect URIs in Google Cloud Console.
             web_client_id: str = self._get_web_client_id()  # type: ignore[assignment]
             web_client_secret: str = self._get_web_client_secret()  # type: ignore[assignment]
+            project_id = self._get_project_id()
+            if project_id:
+                authorize_url = f"https://nestservices.google.com/partnerconnections/{project_id}/auth"
+            else:
+                authorize_url = "https://nestservices.google.com/partnerconnections/auth"
+
             return AuthenticationConfig(
+                type="oauth",
                 provider="google_nest",
-                auth_url="https://nestservices.google.com/partnerconnections/{project_id}/auth",
-                token_url="https://oauth2.googleapis.com/token",
+                friendly_name="Google Nest",
                 client_id=web_client_id,
+                keys=["access_token", "refresh_token"],
+                authorize_url=authorize_url,
+                exchange_url="https://oauth2.googleapis.com/token",
                 client_secret=web_client_secret,
                 scopes=["https://www.googleapis.com/auth/sdm.service"],
                 supports_pkce=False,
                 requires_background_refresh=True,
                 extra_authorize_params={"access_type": "offline", "prompt": "consent"},
+                refresh_token_secret_key="NEST_REFRESH_TOKEN",
             )
 
         # Default: iOS/PKCE flow — thermostat only, no camera streaming
