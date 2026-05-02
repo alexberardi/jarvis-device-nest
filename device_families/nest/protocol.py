@@ -298,11 +298,10 @@ class NestProtocol(IJarvisDeviceProtocol):
         return devices
 
     async def control(
-        self, ip: str, action: str, data: dict[str, Any] | None = None, **kwargs: Any,
+        self, device: DiscoveredDevice, action: str, params: dict[str, Any] | None = None,
     ) -> DeviceControlResult:
-        entity_id: str = kwargs.get("entity_id", "")
-        cloud_id: str = kwargs.get("cloud_id", "")
-        params: dict[str, Any] | None = data
+        entity_id: str = device.entity_id
+        cloud_id: str = device.cloud_id or ""
         access_token: str | None = self._get_access_token()
         if not access_token:
             return DeviceControlResult(
@@ -422,8 +421,11 @@ class NestProtocol(IJarvisDeviceProtocol):
         except Exception as e:
             return DeviceControlResult(success=False, entity_id=entity_id, action=action, error=f"Control failed: {e}")
 
-    async def get_state(self, ip: str, **kwargs: Any) -> dict[str, Any] | None:
-        cloud_id: str = kwargs.get("cloud_id", "")
+    async def get_state(self, device: DiscoveredDevice | str = "", **kwargs: Any) -> dict[str, Any] | None:
+        if isinstance(device, DiscoveredDevice):
+            cloud_id: str = device.cloud_id or ""
+        else:
+            cloud_id: str = kwargs.get("cloud_id", "")
         access_token: str | None = self._get_access_token()
         if not access_token:
             return {"error": "NEST_ACCESS_TOKEN not configured"}
