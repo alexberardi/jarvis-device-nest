@@ -41,7 +41,6 @@ logger = JarvisLogger(service="device.nest")
 
 _storage = JarvisStorage("nest")
 
-DEFAULT_CLIENT_ID: str = "683175564329-24fi9h6hck48hfrbjhb24vf12680e5ec.apps.googleusercontent.com"
 SDM_API_BASE: str = "https://smartdevicemanagement.googleapis.com/v1"
 
 _SDM_TYPE_TO_DOMAIN: dict[str, str] = {
@@ -106,8 +105,15 @@ class NestProtocol(IJarvisDeviceProtocol):
         return "F"
 
     def _get_client_id(self) -> str:
-        override: str | None = _storage.get_secret("NEST_CLIENT_ID")
-        return override if override else DEFAULT_CLIENT_ID
+        client_id: str | None = _storage.get_secret("NEST_CLIENT_ID")
+        if not client_id:
+            raise ValueError(
+                "NEST_CLIENT_ID is not set. Create your own Google Cloud OAuth "
+                "client (iOS application type) for the Smart Device Management "
+                "API and set it as the NEST_CLIENT_ID secret. See the README for "
+                "setup instructions."
+            )
+        return client_id
 
     def _get_web_client_id(self) -> str | None:
         return _storage.get_secret("NEST_WEB_CLIENT_ID")
@@ -126,6 +132,7 @@ class NestProtocol(IJarvisDeviceProtocol):
     def required_secrets(self) -> list[JarvisSecret]:
         base: list[JarvisSecret] = [
             JarvisSecret("NEST_PROJECT_ID", "SDM Device Access project ID", "integration", "string", required=True, is_sensitive=False, friendly_name="Project ID"),
+            JarvisSecret("NEST_CLIENT_ID", "Your Google Cloud OAuth client ID (iOS application type) for the SDM API", "integration", "string", required=True, is_sensitive=False, friendly_name="OAuth Client ID"),
             JarvisSecret("NEST_TEMP_UNIT", "Temperature unit: F or C (default F)", "integration", "string", required=False, is_sensitive=False, friendly_name="Temperature Unit"),
             JarvisSecret(
                 "NEST_CAMERA_SUPPORT", "Enable live camera/doorbell streaming",

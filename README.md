@@ -13,7 +13,8 @@ python scripts/command_store.py install --url https://github.com/alexberardi/jar
 1. Create a Google Cloud project and enable the Smart Device Management API
 2. Register for [Device Access](https://console.nest.google.com/device-access) ($5 one-time fee)
 3. Create a Device Access project to get your project ID
-4. Complete OAuth setup through Jarvis to link your Google account
+4. In your Google Cloud project, create an OAuth 2.0 client ID (**iOS** application type) and supply it as `NEST_CLIENT_ID`. This makes you authenticate through your own GCP project and quota rather than a shared one.
+5. Complete OAuth setup through Jarvis to link your Google account
 
 ## Supported Devices
 
@@ -28,7 +29,7 @@ python scripts/command_store.py install --url https://github.com/alexberardi/jar
 | `NEST_PROJECT_ID` | Yes | SDM Device Access project ID |
 | `NEST_ACCESS_TOKEN` | Auto | OAuth access token (auto-populated after auth) |
 | `NEST_REFRESH_TOKEN` | Auto | OAuth refresh token (auto-populated after auth) |
-| `NEST_CLIENT_ID` | No | Override default Google OAuth client ID |
+| `NEST_CLIENT_ID` | Yes | Your own Google OAuth client ID (iOS application type) for the SDM API. No shared default is provided — supply your own. |
 | `NEST_TEMP_UNIT` | No | Temperature unit: `F` (default) or `C` |
 
 ## Structure
