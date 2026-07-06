@@ -122,6 +122,83 @@ class NestProtocol(IJarvisDeviceProtocol):
             and bool(self._get_web_client_id() and self._get_web_client_secret())
         )
 
+    async def get_stream_source(self, device: DiscoveredDevice) -> str | None:
+        """Build a go2rtc ``nest:`` source URL for a Nest camera/doorbell.
+
+        The node hands this string to command-center, which registers it with
+        go2rtc verbatim (command-center owns no Nest specifics). go2rtc's nest
+        source treats ``protocols`` as a hard switch: ``protocols=RTSP`` forces
+        GenerateRtspStream — which WebRTC-only devices (the battery Nest Doorbell/
+        Cam) reject with HTTP 400 — while WebRTC is selected by OMITTING the param.
+        We prefer WebRTC and only send ``protocols=RTSP`` for devices that support
+        RTSP but not WebRTC.
+        """
+        if not self._has_camera_support():
+            return None
+
+        client_id: str | None = self._get_web_client_id()
+        client_secret: str | None = self._get_web_client_secret()
+        refresh_token: str | None = _storage.get_secret("NEST_REFRESH_TOKEN")
+        project_id: str | None = self._get_project_id()
+        if not (client_id and client_secret and refresh_token and project_id):
+            return None
+
+        cloud_id: str = device.cloud_id or ""
+        nest_device_id: str = cloud_id.rsplit("/", 1)[-1] if "/" in cloud_id else cloud_id
+        if not nest_device_id:
+            return None
+
+        from urllib.parse import urlencode
+
+        params: dict[str, str] = {
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "refresh_token": refresh_token,
+            "project_id": project_id,
+            "device_id": nest_device_id,
+        }
+        if await self._camera_requires_rtsp(cloud_id):
+            params["protocols"] = "RTSP"
+        return f"nest:?{urlencode(params)}"
+
+    async def _camera_requires_rtsp(self, cloud_id: str) -> bool:
+        """True only if the device supports RTSP but NOT WebRTC.
+
+        Reads CameraLiveStream.supportedProtocols via a read-only SDM GET. On any
+        failure we return False (→ WebRTC / omit the param), the safe default for
+        modern Nest cameras — an RTSP fallback would re-break WebRTC-only doorbells.
+        """
+        access_token: str | None = self._get_access_token()
+        if not access_token or not cloud_id:
+            return False
+        try:
+            import httpx
+        except ImportError:
+            return False
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.get(
+                    f"{SDM_API_BASE}/{cloud_id}",
+                    headers={"Authorization": f"Bearer {access_token}"},
+                )
+            if resp.status_code != 200:
+                logger.warning(
+                    "Nest supportedProtocols lookup failed; defaulting to WebRTC",
+                    status=resp.status_code,
+                )
+                return False
+            trait: dict[str, Any] = resp.json().get("traits", {}).get(
+                "sdm.devices.traits.CameraLiveStream", {}
+            )
+            protocols: list[str] = trait.get("supportedProtocols", []) or []
+            return "RTSP" in protocols and "WEB_RTC" not in protocols
+        except Exception as e:
+            logger.warning(
+                "Nest supportedProtocols lookup errored; defaulting to WebRTC",
+                error=str(e),
+            )
+            return False
+
     @property
     def required_secrets(self) -> list[JarvisSecret]:
         base: list[JarvisSecret] = [
